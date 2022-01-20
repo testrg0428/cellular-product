@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+# 2021/7/13, borchen
+#
+# ./function/log-export.func 192.168.1.1 10 m300-c070-v2.13-logexport m300
+#
+#
+
+device_ip=$1
+num=$2
+log=$3
+cfg=$4
+
+if [ "$cfg" != "" ]; then
+    if [ -f ./cfg/$cfg.ini ]; then
+        cp ./cfg/$cfg.ini ./xxx/cfg.ini
+    fi
+fi
+
+if [ "$log" == "" ]; then
+    if [ -s ./xxx/log_file_name.xxxx ]; then
+        log=`cat ./xxx/log_file_name.xxxx`
+    else
+        log="m330-c000-v1.05-backup"
+    fi
+fi
+
+log_1="$log.log"
+
+confirm_log="./xxx/confirm_flag.xxxxx"
+
+./cfg/log-export.cfg $device_ip
+sleep 1
+log_date=`date "+%Y%m%d%H%M"`
+
+echo $log_date > ./xxx/log-export-log-date.xxxx
+
+for i in $(seq 1 10)
+do
+    ./function/login.func $device_ip
+    curl -s -b "./xxx/cookie" http://$device_ip:8000 > ./xxx/log-export-$log_date.tar.gz
+    sleep 10
+    if [ -s ./xxx/log-export-$log_date.tar.gz ]; then break; else rm -rf ./xxx/log-export-$log_date.tar.gz; fi
+done
+
+if [ -s ./xxx/log-export-$log_date.tar.gz ]; then
+    file_size=`ls -l ./xxx/log-export-$log_date.tar.gz | awk -F" " '{print $5}'`
+    echo $num", pass, log export file: log-export-$log_date.tar.gz, file size: $file_size bytes" | tee -a $log_1
+else
+    echo $num", fail, log export file: log-export-$log_date.tar.gz" | tee -a $log_1
+    echo 1 > $confirm_log
+fi

@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# 2019/6/12, by borchen
+#
+
+device_ip=$1
+cfg=$2
+
+if [ "$cfg" != "" ]; then
+    if [ -f ./cfg/$cfg.ini ]; then
+        cp ./cfg/$cfg.ini ./xxx/cfg.ini
+    fi
+fi
+
+# save cookie to cookie.txt
+#curl -d "user=root&pass=2wsx#EDC" -c cookie -k https://192.168.1.1/api/login
+./function/login.func $device_ip
+
+sleep 1
+echo "Reboot!"
+curl -s -b "./xxx/cookie" -k http://$device_ip/cgi-bin/icos_config.cgi?act=coldreboot
+sleep 1

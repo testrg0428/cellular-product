@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# 2019/6/11, 6/24, 6/27 by borchen
+#
+
+device_ip=$1
+cfg=$2
+
+if [ "$cfg" != "" ]; then
+    if [ -f ./cfg/$cfg.ini ]; then
+        cp ./cfg/$cfg.ini ./xxx/cfg.ini
+    fi
+fi
+
+if [ -s ./xxx/cfg.ini ]; then
+    source ./xxx/cfg.ini
+fi
+
+ping $device_ip -c 1
+sleep 1
+curl -s -d "user=$user&pass=$password" -c "./xxx/cookie" -k http://$device_ip/api/login > ./json/loginstatus.json
+sleep 1
+
+for i in $(seq 1 3)
+do
+    ok_result=`jq '.fail' ./json/loginstatus.json`
+    if [ "$ok_result" == true ]; then
+	echo ", fail, try #$i times login http://$device_ip, user=$user, password=$password"
+        curl -s -d "user=$user&pass=$password" -c "./xxx/cookie" -k http://$device_ip/api/login > ./json/loginstatus.json
+        sleep 1
+    else
+        echo ", pass, login http://$device_ip, user=$user, password=$password"
+        break
+    fi
+done
+

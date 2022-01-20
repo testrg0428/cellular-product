@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# 2020/10/17, 10/25 borchen
+#
+# ./function/success_fail.func ./xxx/confirm_flag.xxxxx
+#
+#
+
+testlog=$1
+
+success_log="./xxx/success_upgrade.xxx"
+fail_log="./xxx/fail_upgrade.xxx"
+confirm_log="./xxx/confirm_flag.xxxxx"
+
+if [ ! -s $success_log ]; then echo 0 > $success_log; fi
+if [ ! -s $fail_log ]; then echo 0 > $fail_log; fi
+if [ ! -s $confirm_log ]; then echo 0 > $confirm_log; fi
+
+if [ "$testlog" != "" ]; then
+    if [ ! -s $testlog ]; then testlog=$confirm_log; fi
+else
+    testlog=$confirm_log
+fi
+
+confirm_fail=`cat $testlog`
+if [ "$confirm_fail" == 0 ]; then
+    success=`cat $success_log`
+    success=$[$success+1]
+    echo $success > $success_log
+else
+    fail=`cat $fail_log`
+    fail=$[$fail+1]
+    echo $fail > $fail_log
+fi
+
+echo 0 >  $testlog
+sleep 1
